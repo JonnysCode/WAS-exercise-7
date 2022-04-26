@@ -1,7 +1,5 @@
 import random
 
-import numpy as np
-
 
 # Class representing an artificial ant of the ant colony
 """
@@ -25,8 +23,7 @@ class Ant:
             self.current_location = next_location
             self.path.append(next_location)
 
-        # Update ants pheromone
-        self._update_pheromone()
+        self.travelled_distance += self.environment.get_distance(self.current_location, self.path[0])
 
     # Select the next path based on the random proportional rule of the ACO algorithm
     def select_path(self):
@@ -54,9 +51,7 @@ class Ant:
 
         return (tau ** self.alpha) * (eta ** self.beta)
 
-    def _update_pheromone(self):
-        dim = self.environment.dim
-        self.pheromone_delta = np.zeros((dim, dim))
-
-        for i, _ in enumerate(self.path):
-            self.pheromone_delta[i][i-1] += 1 / self.travelled_distance
+    def reset(self, location):
+        self.current_location = location
+        self.travelled_distance = 0
+        self.path = [location]

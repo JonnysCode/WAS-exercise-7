@@ -39,11 +39,19 @@ class Environment:
 
     # Update the pheromone trails in the environment
     def update_pheromone_map(self, ants: list):
+
+        # Evaporate pheromones
         for i, row in enumerate(self.pheromone):
             for j, col in enumerate(row):
-                self.pheromone[i][j] *= self.rho
-                for ant in ants:
-                    self.pheromone[i][j] += ant.pheromone_delta[i][j]
+                self.pheromone[i][j] *= (1-self.rho)
+
+        # Add new pheromone
+        for ant in ants:
+            for x in range(len(ant.path)):
+                delta_tau = 1 / ant.travelled_distance
+                i, j = ant.path[x-1] - 1, ant.path[x] - 1    # -1 each because city values start from 1
+                self.pheromone[i][j] += delta_tau
+                self.pheromone[j][i] += delta_tau
 
     # Get the pheromone trails in the environment
     def get_pheromone_map(self):

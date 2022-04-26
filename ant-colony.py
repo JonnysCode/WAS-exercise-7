@@ -43,37 +43,46 @@ class AntColony:
 
     # Solve the ant colony optimization problem  
     def solve(self):
+        shortest_distance = np.inf
+        solution = []
+
         self.environment.initialize_pheromone_map(self.ant_population)
 
         differences = []
-        for _ in range(self.iterations):
+        for i in range(self.iterations):
             distances = []
             best_ant = 0
             best_distance = np.inf
-            for i, ant in enumerate(self.ants):
+            for j, ant in enumerate(self.ants):
                 ant.run()
                 distances.append(ant.travelled_distance)
+
+                # Shortest of iteration
                 if ant.travelled_distance < best_distance:
                     best_ant = i
                     best_distance = ant.travelled_distance
 
+                # Shortest overall
+                if ant.travelled_distance < shortest_distance:
+                    shortest_distance = ant.travelled_distance
+                    solution = ant.path
+
             differences.append(max(distances) - min(distances))
-            plot(self.environment.coordinates, self.ants[best_ant].path, _)
+            plot(self.environment.coordinates, self.ants[best_ant].path, i)
+            print(f'[{i+1:03d}] Shortest distance: {best_distance}')
 
             self.environment.update_pheromone_map(self.ants)
-            print(f'Pheromone: Min {min(self.environment.get_pheromone_map())}\n Max {max(self.environment.get_pheromone_map())}')
+
+            if i != self.iterations - 1:
+                for ant in self.ants:
+                    ant.reset(random.choice(self.environment.get_possible_locations()))
 
         # plotting
         x = np.arange(1, self.iterations + 1)
         y = np.array(differences)
-        plt.plot(x, y, color="green")
+        plt.plot(x, y)
         plt.show()
 
-        shortest_distance, solution = np.inf, []
-        for ant in self.ants:
-            if ant.travelled_distance < shortest_distance:
-                shortest_distance = ant.travelled_distance
-                solution = ant.path
         return solution, shortest_distance
 
 
@@ -83,19 +92,15 @@ def plot(points, path: list, idx=0):
     for point in points:
         x.append(point[0])
         y.append(point[1])
-    # noinspection PyUnusedLocal
     y = list(map(operator.sub, [max(y) for i in range(len(points))], y))
     plt.plot(x, y, 'co')
 
     for _ in range(0, len(path)):
         i = path[_ - 1] - 1
         j = path[_] - 1
-        # noinspection PyUnresolvedReferences
         plt.arrow(x[i], y[i], x[j] - x[i], y[j] - y[i], color='r', length_includes_head=True)
 
-    # noinspection PyTypeChecker
     plt.xlim(0, max(x) * 1.1)
-    # noinspection PyTypeChecker
     plt.ylim(0, max(y) * 1.1)
     #plt.show()
     plt.savefig(f'plots/path_{idx:04d}.png')
@@ -104,7 +109,10 @@ def plot(points, path: list, idx=0):
 
 def main():
     # Initialize the ant colony
-    ant_colony = AntColony(50, 10, 1, 5, 0.1)
+    # ant_colony = AntColony(50, 25, 1, 5, 0.5)   # 12078
+    # ant_colony = AntColony(100, 25, 1, 5, 0.5)   # 11175
+    # ant_colony = AntColony(100, 25, 1, 2, 0.5)   # 11794 slower convergence towards min
+    ant_colony = AntColony(50, 50, 1, 5, 0.3)   # 11141
 
     # Solve the ant colony optimization problem
     solution, distance = ant_colony.solve()
